@@ -20,4 +20,11 @@
 * A preview link of the song from Spotify
 * The album that the song is from
   
-Enjoy!
+## View these videos to see the commands in action.
+movie-this : https://drive.google.com/file/d/1zTx32IyykZ123WSUPJo2mT2kzhiFwXfC/view
+
+concert-this: https://drive.google.com/file/d/1rdb-EgkZiIcpfGJTufcyyTLvjezHeoNW/view
+
+spotify-this-song: https://drive.google.com/file/d/1RYzh4rmW_iACVMwq-GD32qG77-jRWNLA/view
+
+do-what-it-says: https://drive.google.com/file/d/1M40D8IwPoFBErVJoDQAXGHsZ8i8AskFz/view
