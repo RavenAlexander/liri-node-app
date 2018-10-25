@@ -6,18 +6,11 @@ require("dotenv").config();
 // BandsinTown API
 // app id: 44a7f8e7f90fc2fd4bc21913a5ad0450
 
-
-// NPM module used to access Bands in Town API.
-require('bandsintown')('44a7f8e7f90fc2fd4bc21913a5ad0450');
-
 // Used to access spotify keys in local file, keys.js.
-require("./keys.js");
+var keys = require("./keys.js");
 
 // NPM module used to access Spotify API.
 var Spotify = require('node-spotify-api');
-
-//NPM module to access OMDB
-var omdb = require('omdb');
 
 // NPM module used to access OMDB API.
 var request = require("request");
@@ -25,178 +18,182 @@ var request = require("request");
 // NPM module used to read the random.txt file.
 var fs = require("fs");
 
+var moment = require('moment');
+moment().format();
+
 // Controller and required parameters.
 // ____________________________________________________________________________________
+function getConcert(concertArtist) {
+
+	request("https://rest.bandsintown.com/artists/" + concertArtist + "/events?app_id=44a7f8e7f90fc2fd4bc21913a5ad0450&date=upcoming", function (error, response, body) {
+		 if (!error && response.statusCode == 200) {
+			 var jsonData = JSON.parse(body);
+
+			console.log("Artist(s): " + jsonData[0].lineup);
+			 console.log("Venue Name: " + jsonData[0].venue.name);
+			 console.log("Location: " + jsonData[0].venue.city + ", " + jsonData[0].venue.region +" "+ jsonData[0].venue.country );
+			 console.log("Date of Event: " + moment(jsonData[0].datetime).format("MM-DD-YYYY"));
+		 }
+	 })
+	
+	};
 
 
-// Action requested.
-var action = process.argv[2];
 
-// Optional argument to request specific information.
-// Based on action type.
-var argument = "";
+var getArtistNames = function(artist) {
+	return artist.name;
+}
 
-// Controller function that determines what action is taken,
-// and specific data to complete that action.
-doSomething(action, argument);
+var getMeSpotify = function(songName){
 
-// Switch operation used to determin which action to take.
-function doSomething(action, argument) {
+	var spotify = new Spotify(keys.spotify);
 
-	switch (action) {
-		
-		// Gets concert info.
+spotify.search({type: 'track', query: songName, limit: 5},
+function (err, data){
+	if (err)
+ {
+	 console.log('Error occurred: ' + err);
+	 return; 
+	}
+
+	 var songs = data.tracks.items;
+	 for(var i=0; i<songs.length; i++) {
+		 console.log(i);
+		 console.log('artist(s): '+ songs[i].artists.map(
+			 getArtistNames));
+			 console.log('song name: '+ songs[i].name);
+			 console.log('preview song: '+songs[i].preview_url);
+			 console.log('album: '+ songs[i].album.name);
+			 console.log('----------------------------------------------------');
+		 }
+		});
+	 
+ };
+
+ function lookupSpecificSong() {
+
+
+	    var spotify = new Spotify(keys.spotify);
+		   
+		  spotify.search({type: 'track', query: 'the sign ace of base', limit: 5},
+		  function (err, data){
+			  if (err)
+		   {
+			   console.log('Error occurred: ' + err);
+			   return; 
+			  }
+		  
+			   var songs = data.tracks.items;
+			   for(var i=0; i<songs.length; i++) {
+				   console.log(i);
+				   console.log('artist(s): '+ songs[i].artists.map(
+					   getArtistNames));
+					   console.log('song name: '+ songs[i].name);
+					   console.log('preview song: '+songs[i].preview_url);
+					   console.log('album: '+ songs[i].album.name);
+					   console.log('----------------------------------------------------');
+				   }
+				  });
+				};
+
+
+ var getMeMovie = function(movieName) {
+	request("http://www.omdbapi.com/?t="+ movieName + "&apikey=ebbdc44a", function (error, response, body) {
+		 if (!error && response.statusCode == 200) {
+			 var jsonData = JSON.parse(body);
+
+			 console.log("Movie Title: " + jsonData.Title);
+			 console.log("IMDB Rating: " + jsonData.imdbRating);
+			 console.log("Country Produced In: " + jsonData.Country);
+			 console.log("Language: " + jsonData.Language);
+			 console.log("Plot: " + jsonData.Plot);
+			 console.log("Actors: " + jsonData.Actors);
+			 //Rotten Tomatoes Rating 
+			 console.log(jsonData.Ratings[1]);
+			 //Rotten Tomatoes URL is unavailable to use without an API key from Fandango, see this link for details: https://github.com/omdbapi/OMDb-API/issues/5
+			//  console.log("Rotten Tomatoes URL: " + jsonData.tomatoURL);
+			 console.log("Release Year: " + jsonData.Year);
+		 }
+	 }); 
+ };
+
+ var lookupSpecificMovie = function() {
+	request("http://www.omdbapi.com/?t="+ "Mr-Nobody" + "&apikey=ebbdc44a", function (error, response, body) {
+		 if (!error && response.statusCode == 200) {
+			 var jsonData = JSON.parse(body);
+
+			 console.log("Movie Title: " + jsonData.Title);
+			 console.log("IMDB Rating: " + jsonData.imdbRating);
+			 console.log("Country Produced In: " + jsonData.Country);
+			 console.log("Language: " + jsonData.Language);
+			 console.log("Plot: " + jsonData.Plot);
+			 console.log("Actors: " + jsonData.Actors);
+			 //Rotten Tomatoes Rating
+			 console.log(jsonData.Ratings[1]);
+			  //Rotten Tomatoes URL is unavailable to use without an API key from Fandango, see this link for details: https://github.com/omdbapi/OMDb-API/issues/5
+			//  console.log("Rotten Tomatoes URL: " + jsonData.tomatoURL);
+			 console.log("Release Year: " + jsonData.Year);
+		 }
+	 })
+ };
+
+ var doWhatItSays = function() {
+	 fs.readFile('random.txt', 'utf8', function (err, data) {
+		 if (err) throw err;
+
+		 var dataArr = data.split(',');
+
+		 if (dataArr.length == 2) {
+			 pick(dataArr[0], dataArr[1]);
+		 } else if (dataArr.length ==1) {
+			 pick(dataArr[0]);
+		 }
+	 });
+ };
+
+var pick = function(caseData, functionData) {
+	switch(caseData){
 		case "concert-this": 
-		getConcert();
+		//If no concert name provided, LIRI tells you to include one
+		if (functionData === undefined) {
+			console.log("Please input an Artist/Band name.");
+			return;
+		} else {
+		getConcert(functionData);
+		}
 		break;
-
-		// Gets song information.
-		case "spotify-this-song":
-		
-		// First gets song title argument.
-		var songTitle = argument;
-
-		// If no song title provided, defaults to specific song.
-		if (songTitle === "") {
+		case 'spotify-this-song':
+		// If no song title provided, defaults to The Sign - Ace of Base.
+		if (functionData === undefined) {
 			lookupSpecificSong();
 
 		// Else looks up song based on song title.
 		} else {
 			// Get song information from Spotify.
-			getSongInfo(songTitle);
+			getMeSpotify(functionData);
 		}
-		break;
-
-		// Gets movie information.
-		case "movie-this":
-
-		// First gets movie title argument.
-		var movieTitle = argument;
-
-		// If no movie title provided, defaults to specific movie.
-		if (movieTitle === "") {
-			getMovieInfo("Inception");
-
-		// Else looks up movie based on movie title.
-		} else {
-			getMovieInfo(movieTitle);
+			break;
+		case 'movie-this':
+		//If no movie title provided, defaults to Mr. Nobody
+		if (functionData === undefined) {
+			lookupSpecificMovie(); }
+		else {
+			getMeMovie(functionData); 
 		}
-		break;
-
-		// Gets text inside file, and uses it to do something.
-		case "do-what-it-says": 
-		doWhatItSays();
-		break;
+			break;
+			
+		case 'do-what-it-says':
+		//Reads the random.txt file and does what it says
+			doWhatItSays();
+			break;
+		default:
+		//if an incorrect command is put in LIRI will say it doesn't know what it means.
+		console.log("LIRI does not know how to handle that");
 	}
-}
-
-// Function to show the concert lists.
-function getConcert() {
-    var bandsintown = require('bandsintown')('44a7f8e7f90fc2fd4bc21913a5ad0450');
-    
-    bandsintown
-  .getArtist('Lady Gaga')
-  .then(function(events) {
-    console.log(events); 
-})
-    bandsintown
-  .getArtistEventList('Lady Gaga')
-.then(function(response) {
-       console.log(response);
-   });
-}
-
-// Calls Spotify API to retrieve song information for song title.
-function getSongInfo(songTitle) {
-
-    var spotify = new Spotify({
-        id: 'e1f12026f482448ab06ceceb39c7bebc',
-        secret: 'e1f12026f482448ab06ceceb39c7bebc'
-      });
-
-	// Calls Spotify API to retrieve a track.
-	spotify.search({type: 'track', query: songTitle, limit: 3}, function(err, data) {
-		if (err) {
-			console.log(err);
-			return
-		} else {
-            console.log(data);
-        }
-
-	});
-	
-}
-
-// When no song title provided, defaults to specific song, All the Small Things.
-function lookupSpecificSong() {
-
-    var spotify = new Spotify({
-        id: 'e1f12026f482448ab06ceceb39c7bebc',
-        secret: 'e1f12026f482448ab06ceceb39c7bebc'
-      });
-       
-      spotify
-        .search({ type: 'track', query: 'All the Small Things' })
-        .then(function(response) {
-          console.log(response);
-        })
-        .catch(function(err) {
-          console.log(err);
-        });
-}
-
-// Passes a query URL to OMDB to retrieve movie information for movie title.
-// If no movie title provided, defaults to the movie, Mr. Nobody.
-function getMovieInfo(movieTitle) {
-    omdb
-	// Runs a request to the OMDB API with the movie specified.
-    var queryUrl = "http://www.omdbapi.com/?i="+ movieTitle + "&apikey=ebbdc44a";
-
-	request(queryUrl, function(error, response, body) {
-	  // If the request is successful...
-	  if (!error && response.statusCode === 200) {
-	    
-
-	    // Prints out movie info.
-	    console.log("Movie Title: " + body.Title);
-	    console.log("Release Year: " + body.Year);
-	    console.log("IMDB Rating: " + body.imdbRating);
-	    console.log("Country Produced In: " + body.Country);
-	    console.log("Language: " + body.Language);
-	    console.log("Plot: " + body.Plot);
-	    console.log("Actors: " + body.Actors);
-	    console.log("Rotten Tomatoes URL: " + body.tomatoURL);
-	  }
-	});
-}
-
-// Uses fs node package to take the text inside random.txt,
-// and do something with it.
-function doWhatItSays() {
-
-	fs.readFile("random.txt", "utf8", function(err, data) {
-		if (err) {
-			console.log(err);
-		} else {
-
-			// Creates array with data.
-			var randomArray = data.split(",");
-
-			// Sets action to first item in array.
-			action = randomArray[0];
-
-			// Sets optional third argument to second item in array.
-			argument = randomArray[1];
-
-			// Calls main controller to do something based on action and argument.
-			doSomething(action, argument);
-		}
-	});
-}
-
-// Logs data to the terminal and output to a text file.
-function logOutput(logText) {
-	fs.writeFile("random.txt", "utf8", function(err, data) {
-
-})
 };
+
+var runThis = function(argOne, argTwo) {
+	pick(argOne, argTwo);
+};
+
+runThis(process.argv[2], process.argv[3]);
