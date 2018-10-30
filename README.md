@@ -9,8 +9,11 @@
 
 ## LIRI can take in the following commands:
 ` concert-this <artist/band name here>`
+
 ` spotify-this-song '<song name here>'`
+
 ` movie-this '<movie name here>'`
+
 ` do-what-it-says`
 
 
